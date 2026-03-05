@@ -109,6 +109,8 @@ export default function App() {
   const [year, setYear] = useState(2020);
   const [km, setKm] = useState(50000);
   const [annualKm, setAnnualKm] = useState(15000);
+  const [carPrice, setCarPrice] = useState("");
+  const [includeCarPrice, setIncludeCarPrice] = useState(false);
   const [result, setResult] = useState(null);
   const [tab, setTab] = useState("purchase");
 
@@ -187,10 +189,19 @@ export default function App() {
         </div>
 
         <Label>연간 예상 주행거리</Label>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
           <input type="range" min={5000} max={50000} step={1000} value={annualKm} onChange={e => setAnnualKm(+e.target.value)}
             style={{ flex: 1, accentColor: "#1a73e8" }} />
           <span style={{ fontWeight: 700, color: "#1a73e8", minWidth: 70, textAlign: "right" }}>{(annualKm/10000).toFixed(1)}만km</span>
+        </div>
+
+        <Label>구매 예정 가격 <span style={{ fontWeight: 400, color: "#aaa" }}>(선택)</span></Label>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+          <input type="number" value={carPrice} onChange={e => setCarPrice(e.target.value)}
+            placeholder="예: 1500"
+            style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: "1.5px solid #e0e0e0",
+              fontSize: 14, outline: "none", color: "#333" }} />
+          <span style={{ fontWeight: 600, color: "#555", fontSize: 14, whiteSpace: "nowrap" }}>만원</span>
         </div>
 
         <button onClick={calculate}
@@ -203,12 +214,33 @@ export default function App() {
       {/* Result */}
       {result && (
         <div style={{ margin: "16px 16px 0" }}>
+          {/* 구매가 포함 옵션 */}
+          {carPrice && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10,
+              padding: "11px 14px", background: "#fff", borderRadius: 12, boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
+              <input type="checkbox" id="includePrice" checked={includeCarPrice}
+                onChange={e => setIncludeCarPrice(e.target.checked)}
+                style={{ width: 17, height: 17, accentColor: "#1a73e8", cursor: "pointer", flexShrink: 0 }} />
+              <label htmlFor="includePrice" style={{ fontSize: 13, fontWeight: 600, color: "#444", cursor: "pointer" }}>
+                구매가 포함해서 보기
+                <span style={{ marginLeft: 6, color: "#1a73e8" }}>({Number(carPrice).toLocaleString()}만원)</span>
+              </label>
+            </div>
+          )}
+
           {/* Summary Cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
-            <SummaryCard label="구매 즉시" value={fmt(result.purchaseTotal)} color="#e53935" sub={`${result.purchaseItems.length}개 항목`} />
-            <SummaryCard label="3년 예상" value={fmt(result.futureTotal)} color="#1a73e8" sub={`${result.futureItems.length}개 항목`} />
-            <SummaryCard label="총 합계" value={fmt(result.purchaseTotal + result.futureTotal)} color="#2e7d32" sub="전체 예상" />
-          </div>
+          {(() => {
+            const carPriceWon = (includeCarPrice && carPrice) ? Number(carPrice) * 10000 : 0;
+            const grandTotal = result.purchaseTotal + result.futureTotal + carPriceWon;
+            return (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
+                <SummaryCard label="구매 즉시" value={fmt(result.purchaseTotal)} color="#e53935" sub={`${result.purchaseItems.length}개 항목`} />
+                <SummaryCard label="3년 예상" value={fmt(result.futureTotal)} color="#1a73e8" sub={`${result.futureItems.length}개 항목`} />
+                <SummaryCard label="총 합계" value={fmt(grandTotal)} color="#2e7d32"
+                  sub={includeCarPrice && carPrice ? "구매가 포함" : "소모품 합계"} />
+              </div>
+            );
+          })()}
 
           {/* Tabs */}
           <div style={{ display: "flex", background: "#e8eaf6", borderRadius: 10, padding: 4, marginBottom: 12 }}>
