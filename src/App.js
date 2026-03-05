@@ -125,11 +125,11 @@ export default function App() {
       const futureCount = calcCountIn3Years(part, needNow ? 0 : km % part.kmCycle || km, carAge, annualKm);
 
       if (needNow) {
-        purchaseItems.push({ key, cost: part.cost, reason: getOverReason(part, carAge, km) });
+        purchaseItems.push({ key, cost: part.cost, reason: getOverReason(part, carAge, km), kmCycle: part.kmCycle, yearCycle: part.yearCycle });
         purchaseTotal += part.cost;
       }
       if (futureCount > 0) {
-        futureItems.push({ key, count: futureCount, cost: part.cost * futureCount });
+        futureItems.push({ key, count: futureCount, cost: part.cost * futureCount, unitCost: part.cost, kmCycle: part.kmCycle, yearCycle: part.yearCycle });
         futureTotal += part.cost * futureCount;
       }
     });
@@ -234,7 +234,9 @@ export default function App() {
                     sub={item.reason}
                     cost={fmt(item.cost)}
                     badge="교체 필요"
-                    badgeColor="#e53935" />
+                    badgeColor="#e53935"
+                    kmCycle={item.kmCycle}
+                    yearCycle={item.yearCycle} />
                 ))
             )}
             {tab === "future" && (
@@ -247,7 +249,10 @@ export default function App() {
                     sub={`${item.count}회 교체 예정`}
                     cost={fmt(item.cost)}
                     badge={`×${item.count}`}
-                    badgeColor="#1a73e8" />
+                    badgeColor="#1a73e8"
+                    kmCycle={item.kmCycle}
+                    yearCycle={item.yearCycle}
+                    unitCost={item.unitCost} />
                 ))
             )}
           </div>
@@ -275,13 +280,19 @@ function SummaryCard({ label, value, color, sub }) {
   );
 }
 
-function ItemRow({ icon, name, sub, cost, badge, badgeColor }) {
+function ItemRow({ icon, name, sub, cost, badge, badgeColor, kmCycle, yearCycle, unitCost }) {
+  const cycleKm = kmCycle >= 99999 ? "해당없음" : `${(kmCycle / 10000).toFixed(0)}만km`;
+  const cycleYear = `${yearCycle}년`;
   return (
     <div style={{ display: "flex", alignItems: "center", padding: "13px 16px", borderBottom: "1px solid #f0f0f0" }}>
       <span style={{ fontSize: 22, marginRight: 12 }}>{icon}</span>
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 600, fontSize: 14, color: "#222" }}>{name}</div>
         <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>{sub}</div>
+        <div style={{ fontSize: 11, color: "#aaa", marginTop: 3 }}>
+          교체주기: {cycleKm} · {cycleYear}
+          {unitCost != null && <span style={{ marginLeft: 6, color: "#bbb" }}>| 1회 {unitCost.toLocaleString()}원</span>}
+        </div>
       </div>
       <div style={{ textAlign: "right" }}>
         <div style={{ display: "inline-block", background: badgeColor, color: "#fff", fontSize: 10, fontWeight: 700,
